@@ -9,7 +9,22 @@ function extractMessage(data: unknown): string | undefined {
   return undefined;
 }
 
+function isApiError(error: unknown): error is ApiError {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    "message" in error &&
+    typeof (error as ApiError).code === "string" &&
+    typeof (error as ApiError).message === "string"
+  );
+}
+
 export function normalizeApiError(error: unknown): ApiError {
+  if (isApiError(error)) {
+    return error;
+  }
+
   if (isCancel(error)) {
     return {
       message: "Request was cancelled.",
@@ -22,6 +37,18 @@ export function normalizeApiError(error: unknown): ApiError {
   }
 
   if (error instanceof Error) {
+    if (
+      error.name === "CanceledError" ||
+      error.name === "AbortError" ||
+      error.message.toLowerCase().includes("canceled") ||
+      error.message.toLowerCase().includes("cancelled")
+    ) {
+      return {
+        message: "Request was cancelled.",
+        code: "CANCELLED",
+      };
+    }
+
     return {
       message: error.message || "Something went wrong.",
       code: "UNKNOWN",
@@ -36,6 +63,13 @@ export function normalizeApiError(error: unknown): ApiError {
 
 function normalizeAxiosError(error: AxiosError): ApiError {
   if (!error.response) {
+    if (error.code === "ERR_CANCELED") {
+      return {
+        message: "Request was cancelled.",
+        code: "CANCELLED",
+      };
+    }
+
     return {
       message:
         "Unable to reach the server. Check your connection and try again.",

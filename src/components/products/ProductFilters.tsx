@@ -40,23 +40,30 @@ export function ProductFilters({
 
   useEffect(() => {
     const controller = new AbortController();
+    let active = true;
 
     async function load() {
       setCategoriesLoading(true);
       setCategoriesError(null);
       try {
         const data = await getCategories({ signal: controller.signal });
+        if (!active) return;
         setCategories(data);
       } catch (error) {
-        if (isCancelledError(error)) return;
+        if (!active || isCancelledError(error)) return;
         setCategoriesError((error as ApiError).message);
       } finally {
-        setCategoriesLoading(false);
+        if (active) {
+          setCategoriesLoading(false);
+        }
       }
     }
 
     void load();
-    return () => controller.abort();
+    return () => {
+      active = false;
+      controller.abort();
+    };
   }, [retryToken]);
 
   const hasActiveFilters = Boolean(search || category || sort !== "title-asc");
