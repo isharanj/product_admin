@@ -53,6 +53,8 @@ npm run lint
 
 ## Environment
 
+This app talks to the public DummyJSON API at `https://dummyjson.com`. There is no backend to deploy.
+
 Copy `.env.example` if you want to override the API base URL:
 
 ```bash
@@ -62,6 +64,8 @@ cp .env.example .env.local
 | Variable | Description | Default |
 | --- | --- | --- |
 | `NEXT_PUBLIC_API_BASE_URL` | DummyJSON base URL | `https://dummyjson.com` |
+
+Leave this unset on Vercel, or set it to `https://dummyjson.com`. An empty value would previously make Axios call `/auth/login` on your own domain (404). The app now ignores empty or non-http values and uses DummyJSON.
 
 No secrets are required for this assignment.
 
@@ -214,9 +218,7 @@ Keeping DummyJSON’s simulated writes visible without pretending the server per
 
 ## Deploy
 
-Suggested next steps:
-
 1. Push this repository to GitHub
-2. Import the project in Vercel
-3. Set `NEXT_PUBLIC_API_BASE_URL` if needed (defaults already work)
-4. Deploy
+2. Import the project in Vercel as a Next.js app
+3. Do not point `NEXT_PUBLIC_API_BASE_URL` at your Vercel domain. Leave it unset, or set it to `https://dummyjson.com`
+4. Redeploy after this change — `NEXT_PUBLIC_*` values are baked in at build time
